@@ -1,0 +1,6 @@
+Info: Front (top side) placement file: '/Users/houser/Projects/DDR Pad (Shawn)/DDR Well v1.0/gerber-v1.0/DDR Pad-top-pos.csv'.
+Info: Component count: 16.
+Info: Back (bottom side) placement file: '/Users/houser/Projects/DDR Pad (Shawn)/DDR Well v1.0/gerber-v1.0/DDR Pad-bottom-pos.csv'.
+Info: Component count: 0.
+Info: Full component count: 16.
+Info: File generation successful.
