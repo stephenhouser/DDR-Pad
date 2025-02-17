@@ -12,7 +12,7 @@
 // Overall brightness
 #define BRIGHTNESS 		128
 // Pin to use to control LEDs
-#define LED_DATA_PIN 	0
+#define LED_DATA_PIN 	14
 
 // Pins to use for button inputs
 #define PAD_1 			2
@@ -22,8 +22,8 @@
 #define PAD_5 			6
 #define PAD_6 			7
 #define PAD_7 			8
-#define PAD_8 			9
-#define PAD_9 			10
+#define PAD_8 			11
+#define PAD_9 			12
 
 /* Enable or disable pads; 0 disabled, 1 enabled */
 int pad_enabled[NUM_PADS] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
