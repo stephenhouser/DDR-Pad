@@ -10,7 +10,7 @@
 #define NUM_LEDS		(NUM_PADS * LEDS_PER_PANEL)
 
 // Overall brightness
-#define BRIGHTNESS 		128
+#define BRIGHTNESS 		64
 // Pin to use to control LEDs
 #define LED_DATA_PIN 	14
 
@@ -63,7 +63,7 @@ void read_buttons() {
 void light_pad(int pad, int value) {
 	/* compute which LEDs to turn on. */
 	int led_start = pad * LEDS_PER_PANEL;
-	int led_end = (pad + 1) * LEDS_PER_PANEL;
+	int led_end = led_start + LEDS_PER_PANEL;
 
 	for (int i = led_start; i < led_end; i++) {
 		leds[i] = value ? CRGB::White : CRGB::Black;
@@ -85,10 +85,12 @@ void setup_pads() {
 			light_pad(b, 1);
 			FastLED.show();
 
-			delay(111);
+			// delay(111);
+			delay(250);
 			light_pad(b, 0);
 			FastLED.show();
 		}
+		delay(1);
 	}
 	Serial.println(" done.");
 }
@@ -108,10 +110,20 @@ void send_keys() {
 #if defined(USB_KEYBOARDONLY)
 	for (int b = 0; b < NUM_PADS; b++) {
 		if (pad_enabled[b]) {
-			if (button[b].fallingEdge()) {
+			if (button[b].fell()) {
 				Keyboard.press(button_keys[b]);
-			} else {
+			} else if (button[b].rose()) {
 				Keyboard.release(button_keys[b]);
+			}
+		}
+	}
+#else
+	for (int b = 0; b < NUM_PADS; b++) {
+		if (pad_enabled[b]) {
+			if (button[b].fell()) {
+				Serial.printf("%d down\n", b);
+			} else if (button[b].rose()) {
+				Serial.printf("%d up\n", b);
 			}
 		}
 	}
@@ -132,8 +144,26 @@ void setup() {
 }
 
 /* Arduino loop, read buttons and light up pads. */
+int counter = 0;
+int butt = 0;
+
 void loop() {
 	read_buttons();
 	light_pads();
 	send_keys();
+
+	delay(1);
+	// if (counter++ == 100) {
+	// 	Serial.printf("light %d\n", butt);
+	// 	counter = 0;
+	// 	light_pad(butt, 1);
+	// 	FastLED.show();
+
+	// 	// delay(111);
+	// 	delay(250);
+	// 	light_pad(butt, 0);
+	// 	FastLED.show();
+
+	// 	butt = (butt + 1) % NUM_PADS;
+	// }
 }
