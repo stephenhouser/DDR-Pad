@@ -10,7 +10,7 @@
 #define NUM_LEDS		(NUM_PADS * LEDS_PER_PANEL)
 
 // Overall brightness
-#define BRIGHTNESS 		64
+#define BRIGHTNESS 		192
 // Pin to use to control LEDs
 #define LED_DATA_PIN 	14
 
