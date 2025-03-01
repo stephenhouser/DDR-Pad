@@ -1,6 +1,9 @@
 # DDR Master Controller
 
-Simple keyboard controller for DDR Pad.
+Simple keyboard controller for DDR Pad using Teensy 3.2 and teensy's keyboard module (https://www.pjrc.com/teensy/td_keyboard.html)
 
-Currently just a test with Arduino Nano to verify the pads light up and
-the sensors all work properly.
+
+## TODO
+
+- Use exposed GPIO with jumper or switch to configure for 4-pad (NESW), 8-pad (N, NE, E, SE, S, SW, W, NW), or all 9 pads active.
+

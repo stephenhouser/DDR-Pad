@@ -25,11 +25,15 @@
 #define PAD_8 			11
 #define PAD_9 			12
 
+// Pin to use for 4 or 9 pad toggle switch
+#define PAD_TOGGLE_SW	17
+
 /* Enable or disable pads; 0 disabled, 1 enabled */
 int pad_enabled[NUM_PADS] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
 /* Pins for button inputs for each pad */
 int button_pin[NUM_PADS] = {PAD_1, PAD_2, PAD_3, PAD_4, PAD_5, PAD_6, PAD_7, PAD_8, PAD_9};
 Bounce2::Button button[NUM_PADS];
+Bounce2::Button pad_toggle;
 
 #if defined(USB_KEYBOARDONLY)
 int button_keys[NUM_PADS] = {KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9};
@@ -38,27 +42,6 @@ int button_keys[NUM_PADS] = {KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KE
 /* array of LED colors for FastLED */
 CRGB leds[NUM_LEDS];
 
-void setup_buttons() {
-	Serial.print("Initialize buttons...");
-    for (int b = 0; b < NUM_PADS; b++) {
-        if (pad_enabled[b]) {
-			button[b].attach(button_pin[b], INPUT_PULLUP);
-			button[b].interval(5);
-			button[b].setPressedState(LOW);
-		}
-	}
-
-	Serial.println(" done.");
-}
-
-/* Reads all button inputs, sets button[] based on read values. */
-void read_buttons() {
-    for (int b = 0; b < NUM_PADS; b++) {
-        if (pad_enabled[b]) {
-			button[b].update();
-        }
-    }
-}
 /* Change state of LEDs for specific pad, value=0 for off, 1 for on (white) */
 void light_pad(int pad, int value) {
 	/* compute which LEDs to turn on. */
@@ -68,7 +51,57 @@ void light_pad(int pad, int value) {
 	for (int i = led_start; i < led_end; i++) {
 		leds[i] = value ? CRGB::White : CRGB::Black;
 	}
+
+	FastLED.show();
 }
+
+void light_active_pads() {
+	for (int pad = 0; pad < NUM_PADS; pad++) {		
+		Serial.print(pad);
+
+		if (pad_enabled[pad]) {
+			Serial.print("=enabled ");
+			light_pad(pad, 1);
+
+			delay(250);
+			light_pad(pad, 0);
+		} else {
+			Serial.print("=disabled ");
+		}
+
+		delay(1);
+	}
+
+	Serial.println();
+}
+
+void setup_4pad() {
+	int pad4[NUM_PADS] = {0, 1, 0, 1, 0, 1, 0, 1, 0};
+	for (int p = 0; p < NUM_PADS; p++) {
+		pad_enabled[p] = pad4[p];
+	}
+
+	light_active_pads();
+}
+
+void setup_8pad() {
+	int pad8[NUM_PADS] = {1, 1, 1, 1, 0, 1, 1, 1, 1};
+	for (int p = 0; p < NUM_PADS; p++) {
+		pad_enabled[p] = pad8[p];
+	}
+
+	light_active_pads();
+}
+
+void setup_9pad() {
+	int pad9[NUM_PADS] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
+	for (int p = 0; p < NUM_PADS; p++) {
+		pad_enabled[p] = pad9[p];
+	}
+	
+	light_active_pads();
+}
+
 
 /* Set up LED pads, really just lights up each one for testing. */
 void setup_pads() {
@@ -77,26 +110,12 @@ void setup_pads() {
 	FastLED.addLeds<NEOPIXEL, LED_DATA_PIN>(leds, NUM_LEDS);
 	FastLED.setBrightness(BRIGHTNESS);
 
-	for (int b = 0; b < NUM_PADS; b++) {
-		Serial.print(b);
-		Serial.print(" ");
-
-		if (pad_enabled[b]) {
-			light_pad(b, 1);
-			FastLED.show();
-
-			// delay(111);
-			delay(250);
-			light_pad(b, 0);
-			FastLED.show();
-		}
-		delay(1);
-	}
+	setup_9pad();
 	Serial.println(" done.");
 }
 
 /* Light up pads based on button states; on=lit, off=unlit. */
-void light_pads() {
+void light_pads_loop() {
 	for (int b = 0; b < NUM_PADS; b++) {
 		if (pad_enabled[b] && button[b].changed()) {
 			light_pad(b, button[b].isPressed());
@@ -106,28 +125,67 @@ void light_pads() {
 	FastLED.show();
 }
 
-void send_keys() {
+void setup_buttons() {
+	Serial.print("Initialize buttons...");
+    for (int pad = 0; pad < NUM_PADS; pad++) {
+        if (pad_enabled[pad]) {
+			button[pad].attach(button_pin[pad], INPUT_PULLUP);
+			button[pad].interval(5);
+			button[pad].setPressedState(LOW);
+		}
+	}
+
+	Serial.println(" done.");
+}
+
+/* Reads all button inputs, sets button[] based on read values. */
+void read_buttons_loop() {
+    for (int pad = 0; pad < NUM_PADS; pad++) {
+        if (pad_enabled[pad]) {
+			button[pad].update();
+        }
+    }
+}
+
+void send_keys_loop() {
 #if defined(USB_KEYBOARDONLY)
-	for (int b = 0; b < NUM_PADS; b++) {
-		if (pad_enabled[b]) {
-			if (button[b].fell()) {
-				Keyboard.press(button_keys[b]);
-			} else if (button[b].rose()) {
-				Keyboard.release(button_keys[b]);
+	for (int pad = 0; pad < NUM_PADS; pad++) {
+		if (pad_enabled[pad]) {
+			if (button[pad].fell()) {
+				Keyboard.press(button_keys[pad]);
+			} else if (button[pad].rose()) {
+				Keyboard.release(button_keys[pad]);
 			}
 		}
 	}
 #else
-	for (int b = 0; b < NUM_PADS; b++) {
-		if (pad_enabled[b]) {
-			if (button[b].fell()) {
-				Serial.printf("%d down\n", b);
-			} else if (button[b].rose()) {
-				Serial.printf("%d up\n", b);
+	for (int pad = 0; pad < NUM_PADS; pad++) {
+		if (pad_enabled[pad]) {
+			if (button[pad].fell()) {
+				Serial.printf("%d down\n", pad);
+			} else if (button[pad].rose()) {
+				Serial.printf("%d up\n", pad);
 			}
 		}
 	}
 #endif
+}
+
+void setup_pad_toggle() {
+	pad_toggle.attach(PAD_TOGGLE_SW, INPUT_PULLUP);
+	pad_toggle.interval(5);
+	pad_toggle.setPressedState(LOW);
+}
+
+void pad_toggle_loop() {
+	pad_toggle.update();
+	if (pad_toggle.changed()) {
+		if (pad_toggle.isPressed()) {
+			setup_4pad();
+		} else {
+			setup_9pad();
+		}
+	}
 }
 
 /* Arduino setup, initialize serial, FastLED, and button pins.
@@ -139,6 +197,7 @@ void setup() {
 
 	setup_pads();
 	setup_buttons();
+	setup_pad_toggle();
 
 	Serial.println("Ready!");
 }
@@ -148,9 +207,11 @@ int counter = 0;
 int butt = 0;
 
 void loop() {
-	read_buttons();
-	light_pads();
-	send_keys();
+	read_buttons_loop();
+	send_keys_loop();
+	light_pads_loop();
+
+	pad_toggle_loop();
 
 	delay(1);
 	// if (counter++ == 100) {
